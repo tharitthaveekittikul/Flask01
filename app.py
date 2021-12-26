@@ -19,18 +19,17 @@ mysql = MySQL(app)
 
 @app.before_request
 def before_request():
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(seconds=10)
     g.user = None
 
     if 'username' in session:
         g.user = session['username']
 
-def make_session_permanent():
-    session.permanent = True
-    app.permanent_session_lifetime = timedelta(minutes=1)
-
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/login', methods = ["GET","POST"])
 def login():
@@ -44,7 +43,7 @@ def login():
         cursor.execute('SELECT * FROM adminuser WHERE username = %s AND password = %s', (username,password))
         
         account = cursor.fetchone()
-        print(account)
+        # print(account)
         mysql.connect.commit()
         cursor.close()
         if account:
@@ -63,6 +62,7 @@ def login():
         return redirect(url_for('dashboard'))
     return render_template('login.html', form = form , msg = msg)
 
+
 @app.route('/logout')
 def logout():
     session.pop('username',None)
@@ -74,6 +74,7 @@ def dashboard():
     if not g.user:
         return redirect(url_for('login'))
     return render_template('dashboard.html')
+
 
 if __name__ == "__main__":
     app.run(debug=True)
